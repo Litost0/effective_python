@@ -1,2 +1,2 @@
 Effective python.
-Effective python.
+Effective python
