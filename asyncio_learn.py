@@ -2,37 +2,31 @@ import threading
 import asyncio
 from aiohttp import web
 
-def consumer():
-    r = ''
-    while True:
-        n = yield r
-        if not n:
-            return
-        print('[CONSUMER] Consuming %s...' % n)
-        r = '200 OK'
+# def consumer():
+#     r = ''
+#     while True:
+#         n = yield r
+#         if not n:
+#             return
+#         print('[CONSUMER] Consuming %s...' % n)
+#         r = '200 OK'
 
 
-def produce(c):
-    c.send(None)
-    n = 0
-    while n < 5:
-        n = n + 1
-        print('[PRODUCER] Producing %s...' % n)
-        r = c.send(n)
-        print('[PRODUCER] Consumer return: %s' % r)
-    c.close()
+# def produce(c):
+#     c.send(None)
+#     n = 0
+#     while n < 5:
+#         n = n + 1
+#         print('[PRODUCER] Producing %s...' % n)
+#         r = c.send(n)
+#         print('[PRODUCER] Consumer return: %s' % r)
+#     c.close()
 
-@asyncio.coroutine
-def hello():
-    print('Hello, world! (%s)' % threading.currentThread())
-    # 异步调用asyncio.sleep(1):
-    r = yield from asyncio.sleep(1) # yield from 可以调用另一个generator
-    print('Hello again! (%s)' % threading.currentThread())
+
 
 async def wget(host):
     print('wget %s...' % host)
-    connect = asyncio.open_connection(host, 80)
-    reader, writer = await connect
+    reader, writer = await asyncio.open_connection(host, 80)
     header = 'GET / HTTP/1.0\r\nHost: %s\r\n\r\n' % host
     writer.write(header.encode('utf-8'))
     await writer.drain()
@@ -67,21 +61,22 @@ if __name__ == '__main__':
     # l = list(chain(s, t))
     # print(l)
 
-
-    # # 获取EventLoop:
+    # EventLoop的直接调用：
     # loop = asyncio.get_event_loop()
-
-    # tasks = [hello(), hello()]
-    # # 执行corountine:
+    # tasks = [wget(host) for host in ['www.bilibili.com',
+    #     'www.baidu.com', 'www.ustc.edu.cn']]
     # loop.run_until_complete(asyncio.wait(tasks))
     # loop.close()
 
-    loop = asyncio.get_event_loop()
-    tasks = [wget(host) for host in ['www.bilibili.com',
-        'www.baidu.com', 'www.ustc.edu.cn']]
-    loop.run_until_complete(asyncio.wait(tasks))
-    loop.close()
 
+    # 更常见的实现：不直接调用EventLoop的底层方法，而是使用asyncio.run()等更高级的函数
+    HOSTS = ['www.bilibili.com', 'www.baidu.com', 'www.ustc.edu.cn']
+
+    async def main():
+        tasks = [wget(host) for host in HOSTS]
+        await asyncio.gather(*tasks)
+
+    asyncio.run(main())
 
 
 
